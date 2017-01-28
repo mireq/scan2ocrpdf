@@ -14,26 +14,27 @@ import sys
 SHOW_RESULTS = False
 
 
-def detect_angle(input_filename):
+def detect_angle(image):
 	WORK_IMAGE_SIZE = (1024, 1024)
 	MAX_ANGLE = 10
 
-	pillow_image = Image.open(input_filename).convert('L')
-	pillow_image.thumbnail(WORK_IMAGE_SIZE)
-	image = np.asarray(pillow_image, dtype=np.uint8)
-	image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 201, 5)
-	cv2.bitwise_not(image, image);
+	#image = Image.open(input_filename).convert('L')
+	image = image.convert('L')
+	image.thumbnail(WORK_IMAGE_SIZE)
+	cv_image = np.asarray(image, dtype=np.uint8)
+	cv_image = cv2.adaptiveThreshold(cv_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 201, 5)
+	cv2.bitwise_not(cv_image, cv_image);
 
 	lines = cv2.HoughLinesP(
-		image,
+		cv_image,
 		rho=1,
 		theta=np.pi / 180,
 		threshold=100,
-		minLineLength=image.shape[1] / 2,
+		minLineLength=cv_image.shape[1] / 2,
 		maxLineGap=20
 	)
 
-	draw_lines = image
+	draw_lines = cv_image
 	total_vect = [0, 0]
 	for line in lines:
 		line = line[0]
@@ -52,7 +53,8 @@ def detect_angle(input_filename):
 				vect = (-vect[1], vect[0])
 		total_vect[0] += vect[0]
 		total_vect[1] += vect[1]
-		cv2.line(draw_lines, point1, point2, (255, 0, 0))
+		if SHOW_RESULTS:
+			cv2.line(draw_lines, point1, point2, (255, 0, 0))
 
 	rot = math.atan2(point2[0] - point1[0], point2[1] - point1[1]) * 180 / math.pi
 	corrective_angle = rot - 90.0
@@ -65,9 +67,18 @@ def detect_angle(input_filename):
 	return corrective_angle
 
 
+def deskew_image(image, crop=True):
+	angle = detect_angle(image)
+	if angle != 0:
+		image = image.rotate(-angle, resample=Image.BICUBIC)
+		if crop:
+			x_crop = y_crop = 0
+			print(x_crop, y_crop)
+	return image
+
 
 def main():
-	print(detect_angle(sys.argv[1]))
+	image = deskew_image(Image.open(sys.argv[1]))
 	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
 	#	image = Image.open("/dev/shm/pdf_tmp/text.png")
 	#	api.SetImage(image)
