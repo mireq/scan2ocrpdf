@@ -1,0 +1,85 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from PIL import Image
+from tesserocr import PyTessBaseAPI, PSM
+import cv2
+import math
+import numpy as np
+from subprocess import call
+from PIL import Image
+import sys
+
+
+SHOW_RESULTS = False
+
+
+def detect_angle(input_filename):
+	WORK_IMAGE_SIZE = (1024, 1024)
+	MAX_ANGLE = 10
+
+	pillow_image = Image.open(input_filename).convert('L')
+	pillow_image.thumbnail(WORK_IMAGE_SIZE)
+	image = np.asarray(pillow_image, dtype=np.uint8)
+	image = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 201, 5)
+	cv2.bitwise_not(image, image);
+
+	lines = cv2.HoughLinesP(
+		image,
+		rho=1,
+		theta=np.pi / 180,
+		threshold=100,
+		minLineLength=image.shape[1] / 2,
+		maxLineGap=20
+	)
+
+	draw_lines = image
+	total_vect = [0, 0]
+	for line in lines:
+		line = line[0]
+		point1 = (line[0], line[1])
+		point2 = (line[2], line[3])
+		angle = math.atan2(point2[0] - point1[0], point2[1] - point1[1]) * 180 / math.pi
+		if angle > 180:
+			angle = angle - 180
+		if (angle > MAX_ANGLE and angle < 90 - MAX_ANGLE) or (angle > 90 + MAX_ANGLE and angle < 180 - MAX_ANGLE):
+			continue
+		vect = (point2[0] - point1[0], point2[1] - point1[1])
+		if angle < 90 - MAX_ANGLE or angle > 90 + MAX_ANGLE:
+			if vect[1] > 0:
+				vect = (vect[1], -vect[0])
+			else:
+				vect = (-vect[1], vect[0])
+		total_vect[0] += vect[0]
+		total_vect[1] += vect[1]
+		cv2.line(draw_lines, point1, point2, (255, 0, 0))
+
+	rot = math.atan2(point2[0] - point1[0], point2[1] - point1[1]) * 180 / math.pi
+	corrective_angle = rot - 90.0
+
+	if SHOW_RESULTS:
+		cv2.imshow("gray image", draw_lines)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
+
+	return corrective_angle
+
+
+
+def main():
+	print(detect_angle(sys.argv[1]))
+	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
+	#	image = Image.open("/dev/shm/pdf_tmp/text.png")
+	#	api.SetImage(image)
+	#	api.Recognize()
+	#	layout = api.AnalyseLayout()
+	#	orientation, direction, order, deskew_angle = layout.Orientation()
+	#	print ("Orientation: {:d}".format(orientation))
+	#	print ("WritingDirection: {:d}".format(direction))
+	#	print ("TextlineOrder: {:d}".format(order))
+	#	print ("Deskew angle: {:.4f}".format(deskew_angle))
+
+
+
+if __name__ == "__main__":
+	main()
