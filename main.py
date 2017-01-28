@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import math
 import sys
 
+import time
 import cv2
 import numpy as np
 from PIL import Image
@@ -17,7 +18,6 @@ def detect_angle(image):
 	WORK_IMAGE_SIZE = (1024, 1024)
 	MAX_ANGLE = 10
 
-	#image = Image.open(input_filename).convert('L')
 	image = image.convert('L')
 	image.thumbnail(WORK_IMAGE_SIZE)
 	cv_image = np.asarray(image, dtype=np.uint8)
@@ -32,6 +32,9 @@ def detect_angle(image):
 		minLineLength=cv_image.shape[1] / 2,
 		maxLineGap=20
 	)
+
+	if lines is None or lines.shape[0] < 10:
+		return 0
 
 	draw_lines = cv_image
 	total_vect = [0, 0]
@@ -74,14 +77,14 @@ def deskew_image(image, crop=True):
 			ratio = abs(math.tan(math.radians(angle)))
 			x_crop = ratio * image.height / 2
 			y_crop = ratio * image.width / 2
-			image = image.crop((x_crop, y_crop, image.width - x_crop, image.height - y_crop))
+			if x_crop < image.width // 2 and y_crop < image.height // 2:
+				image = image.crop((x_crop, y_crop, image.width - x_crop, image.height - y_crop))
 	return image
 
 
 def main():
 	image = Image.open(sys.argv[1]).convert('RGBA')
 	image = deskew_image(image)
-	image.show()
 	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
 	#	image = Image.open("/dev/shm/pdf_tmp/text.png")
 	#	api.SetImage(image)
