@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import math
+import sys
+
+import cv2
+import numpy as np
 from PIL import Image
 from tesserocr import PyTessBaseAPI, PSM
-import cv2
-import math
-import numpy as np
-from subprocess import call
-from PIL import Image
-import sys
 
 
 SHOW_RESULTS = False
@@ -56,7 +55,7 @@ def detect_angle(image):
 		if SHOW_RESULTS:
 			cv2.line(draw_lines, point1, point2, (255, 0, 0))
 
-	rot = math.atan2(point2[0] - point1[0], point2[1] - point1[1]) * 180 / math.pi
+	rot = math.atan2(total_vect[0], total_vect[1]) * 180 / math.pi
 	corrective_angle = rot - 90.0
 
 	if SHOW_RESULTS:
@@ -72,13 +71,17 @@ def deskew_image(image, crop=True):
 	if angle != 0:
 		image = image.rotate(-angle, resample=Image.BICUBIC)
 		if crop:
-			x_crop = y_crop = 0
-			print(x_crop, y_crop)
+			ratio = abs(math.tan(math.radians(angle)))
+			x_crop = ratio * image.height / 2
+			y_crop = ratio * image.width / 2
+			image = image.crop((x_crop, y_crop, image.width - x_crop, image.height - y_crop))
 	return image
 
 
 def main():
-	image = deskew_image(Image.open(sys.argv[1]))
+	image = Image.open(sys.argv[1]).convert('RGBA')
+	image = deskew_image(image)
+	image.show()
 	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
 	#	image = Image.open("/dev/shm/pdf_tmp/text.png")
 	#	api.SetImage(image)
