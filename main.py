@@ -4,11 +4,10 @@ from __future__ import unicode_literals
 import math
 import sys
 
-import time
 import cv2
 import numpy as np
-from PIL import Image
-from tesserocr import PyTessBaseAPI, PSM
+from PIL import Image, ImageDraw
+from tesserocr import PyTessBaseAPI, PSM, RIL, iterate_level
 
 
 SHOW_RESULTS = False
@@ -16,12 +15,12 @@ SHOW_RESULTS = False
 
 def detect_angle(image):
 	WORK_IMAGE_SIZE = (1024, 1024)
-	MAX_ANGLE = 10
+	MAX_ANGLE = 8
 
 	image = image.convert('L')
 	image.thumbnail(WORK_IMAGE_SIZE)
 	cv_image = np.asarray(image, dtype=np.uint8)
-	cv_image = cv2.adaptiveThreshold(cv_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 201, 5)
+	cv_image = cv2.adaptiveThreshold(cv_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 3, 5)
 	cv2.bitwise_not(cv_image, cv_image);
 
 	lines = cv2.HoughLinesP(
@@ -36,7 +35,12 @@ def detect_angle(image):
 	if lines is None or lines.shape[0] < 10:
 		return 0
 
-	draw_lines = cv_image
+	draw_lines = None
+	if SHOW_RESULTS:
+		#draw_lines = np.full_like(cv_image, 0)
+		draw_lines = np.asarray(image, dtype=np.uint8)
+		cv2.bitwise_not(draw_lines, draw_lines);
+
 	total_vect = [0, 0]
 	for line in lines:
 		line = line[0]
@@ -82,13 +86,43 @@ def deskew_image(image, crop=True):
 	return image
 
 
+def draw_block(draw, bbox, fill=None, outline=None):
+	draw.rectangle(((bbox[0], bbox[1]), (bbox[2], bbox[3])), fill=fill, outline=outline)
+
+
 def main():
 	image = Image.open(sys.argv[1]).convert('RGBA')
 	image = deskew_image(image)
-	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
-	#	image = Image.open("/dev/shm/pdf_tmp/text.png")
-	#	api.SetImage(image)
-	#	api.Recognize()
+	overlay = Image.new('RGBA', image.size, (255,255,255,0))
+	draw = ImageDraw.Draw(overlay)
+	with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
+		api.SetImage(image)
+		api.Recognize()
+		iterator = api.GetIterator()
+		for block in iterate_level(iterator, RIL.BLOCK):
+			for para in iterate_level(iterator, RIL.PARA):
+				for word in iterate_level(iterator, RIL.WORD):
+					for symbol in iterate_level(iterator, RIL.SYMBOL):
+						confidence = max((symbol.Confidence(RIL.SYMBOL) / 100.0) * 4.0 - 3.0, 0.0)
+						red = 255
+						green = 255
+						if confidence > 0.5:
+							red = int(((1.0 - confidence) * 2.0) * 255)
+						if confidence < 0.5:
+							green = int((confidence * 0.5) * 255)
+						draw_block(draw, block.BoundingBox(RIL.SYMBOL), fill=(red,green,0,192), outline=(128,128,128,255))
+						if iterator.IsAtFinalElement(RIL.WORD, RIL.SYMBOL):
+							break
+					draw_block(draw, block.BoundingBox(RIL.WORD), outline=(0,0,255,255))
+					if iterator.IsAtFinalElement(RIL.PARA, RIL.WORD):
+						break
+				draw_block(draw, block.BoundingBox(RIL.PARA), outline=(255,255,0,255))
+				if iterator.IsAtFinalElement(RIL.BLOCK, RIL.PARA):
+					break
+			draw_block(draw, block.BoundingBox(RIL.BLOCK), outline=(255,0,0,255))
+	out = Image.alpha_composite(image, overlay)
+	out.show()
+
 	#	layout = api.AnalyseLayout()
 	#	orientation, direction, order, deskew_angle = layout.Orientation()
 	#	print ("Orientation: {:d}".format(orientation))
