@@ -27,14 +27,17 @@ def main():
 	reader = scan2ocrpdf.Reader()
 	reader.deskew = args.deskew
 
+	analyzer = scan2ocrpdf.Analyzer()
+
 	try:
-		for image in args.images:
-			reader.read_image(image)
+		for image_path in args.images:
+			image = reader.read_image(image_path)
+			analyzer.analyze_image(image)
 	except UserException as e:
 		sys.stderr.write(str(e))
+	finally:
+		analyzer.close()
 
-	#image = Image.open(sys.argv[1]).convert('RGBA')
-	#image = deskew_image(image)
 	#overlay = Image.new('RGBA', image.size, (255,255,255,0))
 	#draw = ImageDraw.Draw(overlay)
 	#with PyTessBaseAPI(psm=PSM.AUTO_OSD) as api:
