@@ -24,21 +24,28 @@ class TextLine(object):
 	words = []
 
 
+class Font(object):
+	bold = False
+	italic = False
+	underline = False
+	monospace = False
+	serif = False
+	pointsize = 0
+	id = 0
+
+
 class Word(object):
 	bounding_box = None
+	confidence = 0.0
 	symbols = []
 
-	font_bold = False
-	font_italic = False
-	font_underline = False
-	font_monospace = False
-	font_serif = False
-	font_pointsize = 0
-	font_id = 0
+	def __init__(self):
+		self.font = Font()
 
 
 class Symbol(object):
 	bounding_box = None
+	confidence = 0.0
 	image = None
 	text = ''
 
@@ -77,58 +84,61 @@ class Analyzer(object):
 				block.image = tesseract_block.GetImage(RIL.BLOCK, 0, image)
 				blocks.append(block)
 				continue
-			block.paragraphs = self.__decode_paragraphs(iterator, image)
+			block.paragraphs = self.__decode_paragraphs(iterator)
 			blocks.append(block)
 		return blocks
 
-	def __decode_paragraphs(self, iterator, image):
+	def __decode_paragraphs(self, iterator):
 		paragraphs = []
 		for tesseract_paragraph in iterate_level(iterator, RIL.PARA):
 			paragraph = Paragraph()
 			paragraph.bounding_box = tesseract_paragraph.BoundingBox(RIL.PARA)
-			paragraph.lines = self.__decode_lines(iterator, image)
+			paragraph.lines = self.__decode_lines(iterator)
 			paragraphs.append(paragraph)
 			if iterator.IsAtFinalElement(RIL.BLOCK, RIL.PARA):
 				break
 		return paragraphs
 
-	def __decode_lines(self, iterator, image):
+	def __decode_lines(self, iterator):
 		lines = []
 		for tesseract_line in iterate_level(iterator, RIL.TEXTLINE):
-			line = Paragraph()
+			line = TextLine()
 			line.bounding_box = tesseract_line.BoundingBox(RIL.TEXTLINE)
-			line.word = self.__decode_words(iterator, image)
+			line.words = self.__decode_words(iterator)
 			lines.append(line)
 			if iterator.IsAtFinalElement(RIL.PARA, RIL.TEXTLINE):
 				break
 		return lines
 
-	def __decode_words(self, iterator, image):
+	def __decode_words(self, iterator):
 		words = []
 		for tesseract_word in iterate_level(iterator, RIL.WORD):
 			font_attributes = tesseract_word.WordFontAttributes()
-			word = Paragraph()
+			word = Word()
 			word.bounding_box = tesseract_word.BoundingBox(RIL.WORD)
-			word.symbols = self.__decode_symbols(iterator, image)
-			word.font_bold = font_attributes['bold']
-			word.font_italic = font_attributes['italic']
-			word.font_underline = font_attributes['underlined']
-			word.font_monospace = font_attributes['monospace']
-			word.font_serif = font_attributes['serif']
-			word.font_pointsize = font_attributes['pointsize']
-			word.font_id = font_attributes['font_id']
+			word.confidence = float(tesseract_word.Confidence(RIL.WORD)) / 100.0
+			word.symbols = self.__decode_symbols(iterator)
+			word.font.bold = font_attributes['bold']
+			word.font.italic = font_attributes['italic']
+			word.font.underline = font_attributes['underlined']
+			word.font.monospace = font_attributes['monospace']
+			word.font.serif = font_attributes['serif']
+			word.font.pointsize = font_attributes['pointsize']
+			word.font.id = font_attributes['font_id']
 			words.append(word)
 			if iterator.IsAtFinalElement(RIL.TEXTLINE, RIL.WORD):
 				break
 		return words
 
-	def __decode_symbols(self, iterator, image):
+	def __decode_symbols(self, iterator):
 		symbols = []
 		for tesseract_symbol in iterate_level(iterator, RIL.SYMBOL):
-			symbol = Paragraph()
+			symbol = Symbol()
 			symbol.bounding_box = tesseract_symbol.BoundingBox(RIL.SYMBOL)
+			symbol.confidence = float(tesseract_symbol.Confidence(RIL.SYMBOL)) / 100.0
 			symbol.text = tesseract_symbol.GetUTF8Text(RIL.SYMBOL)
 			symbol.image = tesseract_symbol.GetBinaryImage(RIL.SYMBOL)
+
 			symbols.append(symbol)
 			if iterator.IsAtFinalElement(RIL.WORD, RIL.SYMBOL):
 				break

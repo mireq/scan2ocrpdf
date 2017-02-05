@@ -19,7 +19,7 @@ def detect_angle(image):
 	image.thumbnail(WORK_IMAGE_SIZE)
 	cv_image = np.asarray(image, dtype=np.uint8)
 	cv_image = cv2.adaptiveThreshold(cv_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 3, 5)
-	cv2.bitwise_not(cv_image, cv_image);
+	cv2.bitwise_not(cv_image, cv_image)
 
 	lines = cv2.HoughLinesP(
 		cv_image,
@@ -37,7 +37,7 @@ def detect_angle(image):
 	if SHOW_RESULTS:
 		#draw_lines = np.full_like(cv_image, 0)
 		draw_lines = np.asarray(image, dtype=np.uint8)
-		cv2.bitwise_not(draw_lines, draw_lines);
+		cv2.bitwise_not(draw_lines, draw_lines)
 
 	total_vect = [0, 0]
 	for line in lines:
