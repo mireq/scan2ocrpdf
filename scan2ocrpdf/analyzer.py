@@ -51,15 +51,13 @@ class Symbol(object):
 
 
 class Analyzer(object):
-	lang = None
-
 	TEXT_TYPES = set([PT.FLOWING_TEXT, PT.HEADING_TEXT, PT.PULLOUT_TEXT, PT.VERTICAL_TEXT, PT.CAPTION_TEXT])
 
-	def __init__(self):
+	def __init__(self, lang=None):
 		super(Analyzer, self).__init__()
 		kwargs = {}
-		if self.lang is not None:
-			kwargs['lang'] = self.lang
+		if lang is not None:
+			kwargs['lang'] = lang
 		self.api = PyTessBaseAPI(psm=PSM.AUTO_OSD, **kwargs)
 
 	def analyze_image(self, image):

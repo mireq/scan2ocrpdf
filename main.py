@@ -18,20 +18,12 @@ def draw_block(draw, bbox, fill=None, outline=None):
 
 
 def main():
-	parser = argparse.ArgumentParser(description="Convert series of images to PDF")
-	parser.add_argument('--deskew', dest='deskew', action='store_true', help="Deskew images")
-	parser.add_argument('-l', '--lang', dest='lang', help="Specify language(s) used for OCR")
-	parser.add_argument('images', metavar='images', nargs='+', help="List of images")
-	parser.set_defaults(deskew=False)
-	args = parser.parse_args()
-
-	reader = scan2ocrpdf.Reader()
-	reader.deskew = args.deskew
-
-	analyzer = scan2ocrpdf.Analyzer()
+	config = scan2ocrpdf.get_config()
+	reader = scan2ocrpdf.Reader(deskew=config.deskew)
+	analyzer = scan2ocrpdf.Analyzer(lang=config.lang)
 
 	try:
-		for image_path in args.images:
+		for image_path in config.images:
 			image = reader.read_image(image_path)
 			page = analyzer.analyze_image(image)
 	except UserException as e:

@@ -12,7 +12,8 @@ class ReadError(UserException):
 
 
 class Reader(object):
-	deskew = False
+	def __init__(self, deskew=False):
+		self.deskew = deskew
 
 	def read_image(self, path):
 		try:
