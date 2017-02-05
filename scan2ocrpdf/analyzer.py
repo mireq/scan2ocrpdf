@@ -28,9 +28,18 @@ class Word(object):
 	bounding_box = None
 	symbols = []
 
+	font_bold = False
+	font_italic = False
+	font_underline = False
+	font_monospace = False
+	font_serif = False
+	font_pointsize = 0
+	font_id = 0
+
 
 class Symbol(object):
 	bounding_box = None
+	image = None
 	text = ''
 
 
@@ -97,10 +106,17 @@ class Analyzer(object):
 	def __decode_words(self, iterator, image):
 		words = []
 		for tesseract_word in iterate_level(iterator, RIL.WORD):
-			#print(tesseract_word.WordFontAttributes())
+			font_attributes = tesseract_word.WordFontAttributes()
 			word = Paragraph()
 			word.bounding_box = tesseract_word.BoundingBox(RIL.WORD)
 			word.symbols = self.__decode_symbols(iterator, image)
+			word.font_bold = font_attributes['bold']
+			word.font_italic = font_attributes['italic']
+			word.font_underline = font_attributes['underlined']
+			word.font_monospace = font_attributes['monospace']
+			word.font_serif = font_attributes['serif']
+			word.font_pointsize = font_attributes['pointsize']
+			word.font_id = font_attributes['font_id']
 			words.append(word)
 			if iterator.IsAtFinalElement(RIL.TEXTLINE, RIL.WORD):
 				break
@@ -112,6 +128,7 @@ class Analyzer(object):
 			symbol = Paragraph()
 			symbol.bounding_box = tesseract_symbol.BoundingBox(RIL.SYMBOL)
 			symbol.text = tesseract_symbol.GetUTF8Text(RIL.SYMBOL)
+			symbol.image = tesseract_symbol.GetBinaryImage(RIL.SYMBOL)
 			symbols.append(symbol)
 			if iterator.IsAtFinalElement(RIL.WORD, RIL.SYMBOL):
 				break
