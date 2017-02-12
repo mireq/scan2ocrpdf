@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from PIL import Image
 from tesserocr import PyTessBaseAPI, PSM, PT, RIL, iterate_level
+from itertools import chain
 
 
 class Size(object):
@@ -50,6 +52,22 @@ class Page(object):
 	blocks = []
 	size = None
 
+	@property
+	def paragraphs(self):
+		return chain(*(block.paragraphs for block in self.blocks))
+
+	@property
+	def lines(self):
+		return chain(*(paragraph.lines for paragraph in self.paragraphs))
+
+	@property
+	def words(self):
+		return chain(*(line.words for line in self.lines))
+
+	@property
+	def symbols(self):
+		return chain(*(word.symbols for word in self.words))
+
 
 class Block(object):
 	bounding_box = None
@@ -81,6 +99,7 @@ class Word(object):
 	bounding_box = None
 	confidence = 0.0
 	symbols = []
+	text = ''
 
 	def __init__(self):
 		self.font = Font()
@@ -159,6 +178,7 @@ class Analyzer(object):
 			word = Word()
 			word.bounding_box = BoundingBox.from_coordinates(*tesseract_word.BoundingBox(RIL.WORD))
 			word.confidence = float(tesseract_word.Confidence(RIL.WORD)) / 100.0
+			word.text = tesseract_word.GetUTF8Text(RIL.WORD)
 			word.symbols = self.__decode_symbols(iterator)
 			word.font.bold = font_attributes['bold']
 			word.font.italic = font_attributes['italic']
@@ -179,8 +199,7 @@ class Analyzer(object):
 			symbol.bounding_box = BoundingBox.from_coordinates(*tesseract_symbol.BoundingBox(RIL.SYMBOL))
 			symbol.confidence = float(tesseract_symbol.Confidence(RIL.SYMBOL)) / 100.0
 			symbol.text = tesseract_symbol.GetUTF8Text(RIL.SYMBOL)
-			symbol.image = tesseract_symbol.GetBinaryImage(RIL.SYMBOL)
-
+			symbol.image = tesseract_symbol.GetBinaryImage(RIL.SYMBOL).convert('1', dither=Image.NONE)
 			symbols.append(symbol)
 			if iterator.IsAtFinalElement(RIL.WORD, RIL.SYMBOL):
 				break

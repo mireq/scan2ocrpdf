@@ -17,10 +17,10 @@
 									<span class="line" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">
 										{%- for word in line.words -%}
 											{%- with box=word.bounding_box.relative_to(line.bounding_box) -%}
-												<span class="word" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">{{ word.text }}
+												<span class="word" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">
 													{%- for symbol in word.symbols -%}
 														{%- with box=symbol.bounding_box.relative_to(word.bounding_box) -%}
-															<span class="symbol" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">{{ symbol.text }}</span>
+															<span class="symbol" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;"><img src="{{ symbol.image_path }}" alt="" />{{ symbol.text }}</span>
 														{%- endwith -%}
 													{%- endfor -%}
 												</span>

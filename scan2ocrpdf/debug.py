@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import hashlib
 
 from collections import namedtuple
 import os
@@ -29,6 +30,7 @@ class AnalyzedPageDebugGenerator(object):
 		if not self.__debugging_enabled():
 			return
 		self.__make_dest_dir()
+		self.__extract_images()
 		self.__generate_html_output()
 
 	def __debugging_enabled(self):
@@ -39,6 +41,12 @@ class AnalyzedPageDebugGenerator(object):
 		makedirs(self.__dest_dir)
 		makedirs(os.path.join(self.__dest_dir, 'images'))
 		makedirs(os.path.join(self.__dest_dir, 'css'))
+
+	def __extract_images(self):
+		for symbol in self.request.page.symbols:
+			image_hash = hashlib.md5(symbol.image.tobytes()).hexdigest()
+			symbol.image_path = os.path.join('images', image_hash + '.png')
+			symbol.image.save(os.path.join(self.__dest_dir, symbol.image_path))
 
 	def __generate_html_output(self):
 		context = self.__get_template_context()
