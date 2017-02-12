@@ -25,6 +25,7 @@
 													{%- endfor -%}
 												</span>
 											{%- endwith -%}
+											{%- if not loop.last -%}&#32;{%- endif -%}
 										{%- endfor -%}
 									</span>
 								{% endwith %}
