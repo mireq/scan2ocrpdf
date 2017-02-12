@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{ title }}</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" type="text/css" href="css/page.css" />
+</head>
+<body>
+	<div class="page" style="width: {{ page.size.width }}px; height: {{ page.size.height }}px;">
+		{% for page_block in page.blocks %}
+			<div class="block" style="left: {{ page_block.bounding_box.x1 }}px; top: {{ page_block.bounding_box.y1 }}px; width: {{ page_block.bounding_box.width }}px; height: {{ page_block.bounding_box.height }}px;">
+				{% for paragraph in page_block.paragraphs %}
+					{% with box=paragraph.bounding_box.relative_to(page_block.bounding_box) %}
+						<p class="paragraph" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">
+							{% for line in paragraph.lines %}
+								{% with box=line.bounding_box.relative_to(paragraph.bounding_box) %}
+									<span class="line" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">
+										{%- for word in line.words -%}
+											{%- with box=word.bounding_box.relative_to(line.bounding_box) -%}
+												<span class="word" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">{{ word.text }}
+													{%- for symbol in word.symbols -%}
+														{%- with box=symbol.bounding_box.relative_to(word.bounding_box) -%}
+															<span class="symbol" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">{{ symbol.text }}</span>
+														{%- endwith -%}
+													{%- endfor -%}
+												</span>
+											{%- endwith -%}
+										{%- endfor -%}
+									</span>
+								{% endwith %}
+							{% endfor %}
+						</p>
+					{% endwith %}
+				{% endfor %}
+			</div>
+		{% endfor %}
+	</div>
+</body>
+</html>
