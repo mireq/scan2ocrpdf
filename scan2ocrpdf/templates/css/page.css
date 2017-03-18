@@ -3,6 +3,7 @@ body, html {
 	margin: 0;
 	background: #eee;
 	color: black;
+	font-family: sans-serif;
 }
 
 .page {
@@ -29,4 +30,34 @@ body, html {
 
 .symbol img {
 	display: block;
+}
+
+.inspector-window {
+	border: 1px solid #000;
+	width: 300px;
+	position: fixed;
+	top: 8px;
+	right: 16px;
+	padding: 8px;
+	box-shadow: 8px 8px 0 #888;
+	background: white;
+}
+
+.inspector-window dl {
+	margin: 0;
+	padding: 0;
+}
+
+.inspector-window dt {
+	clear: both;
+	font-weight: bold;
+	padding-right: 16px;
+}
+
+.inspector-window dt:after {
+	content: ": ";
+}
+
+.inspector-window dd {
+	font-size: 80%;
 }

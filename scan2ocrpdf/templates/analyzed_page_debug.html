@@ -20,7 +20,7 @@
 												<span class="word" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;">
 													{%- for symbol in word.symbols -%}
 														{%- with box=symbol.bounding_box.relative_to(word.bounding_box) -%}
-															<span class="symbol" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;"><img src="{{ symbol.image_path }}" alt="" />{{ symbol.text }}</span>
+															<span class="symbol" style="left: {{ box.x1 }}px; top: {{ box.y1 }}px; width: {{ box.width }}px; height: {{ box.height }}px;" data-font-id="{{ symbol.font.id }}" data-font-bold="{{ symbol.font.bold }}" data-font-italic="{{ symbol.font.italic }}" data-font-monospace="{{ symbol.font.monospace }}" data-font-serif="{{ symbol.font.serif }}" data-font-pointsize="{{ symbol.font.pointsize }}"><img src="{{ symbol.image_path }}" alt="" />{{ symbol.text }}</span>
 														{%- endwith -%}
 													{%- endfor -%}
 												</span>
@@ -36,5 +36,7 @@
 			</div>
 		{% endfor %}
 	</div>
+	<script src="js/utils.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/inspector.js" type="text/javascript" charset="utf-8"></script>
 </body>
 </html>

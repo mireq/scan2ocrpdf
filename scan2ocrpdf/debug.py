@@ -41,6 +41,7 @@ class AnalyzedPageDebugGenerator(object):
 		makedirs(self.__dest_dir)
 		makedirs(os.path.join(self.__dest_dir, 'images'))
 		makedirs(os.path.join(self.__dest_dir, 'css'))
+		makedirs(os.path.join(self.__dest_dir, 'js'))
 
 	def __extract_images(self):
 		for symbol in self.request.page.symbols:
@@ -51,7 +52,9 @@ class AnalyzedPageDebugGenerator(object):
 	def __generate_html_output(self):
 		context = self.__get_template_context()
 		write_template('analyzed_page_debug.html', 'page.html', self.__dest_dir, context)
-		write_template('analyzed_page_debug.css', 'page.css', os.path.join(self.__dest_dir, 'css'), context)
+		write_template('css/page.css', 'page.css', os.path.join(self.__dest_dir, 'css'), context)
+		write_template('js/inspector.js', 'inspector.js', os.path.join(self.__dest_dir, 'js'), context)
+		write_template('js/utils.js', 'utils.js', os.path.join(self.__dest_dir, 'js'), context)
 
 	def __get_template_context(self):
 		return {
