@@ -101,15 +101,13 @@ class Word(object):
 	symbols = []
 	text = ''
 
-	def __init__(self):
-		self.font = Font()
-
 
 class Symbol(object):
 	bounding_box = None
 	confidence = 0.0
 	image = None
 	text = ''
+	font = None
 
 
 class Analyzer(object):
@@ -180,13 +178,16 @@ class Analyzer(object):
 			word.confidence = float(tesseract_word.Confidence(RIL.WORD)) / 100.0
 			word.text = tesseract_word.GetUTF8Text(RIL.WORD)
 			word.symbols = self.__decode_symbols(iterator)
-			word.font.bold = font_attributes['bold']
-			word.font.italic = font_attributes['italic']
-			word.font.underline = font_attributes['underlined']
-			word.font.monospace = font_attributes['monospace']
-			word.font.serif = font_attributes['serif']
-			word.font.pointsize = font_attributes['pointsize']
-			word.font.id = font_attributes['font_id']
+			font = Font()
+			font.bold = font_attributes['bold']
+			font.italic = font_attributes['italic']
+			font.underline = font_attributes['underlined']
+			font.monospace = font_attributes['monospace']
+			font.serif = font_attributes['serif']
+			font.pointsize = font_attributes['pointsize']
+			font.id = font_attributes['font_id']
+			for symbol in word.symbols:
+				symbol.font = font
 			words.append(word)
 			if iterator.IsAtFinalElement(RIL.TEXTLINE, RIL.WORD):
 				break
