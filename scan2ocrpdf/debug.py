@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import hashlib
-
-from collections import namedtuple
 import os
+from collections import namedtuple
 
+from .generator import FontGenerator
 from .jinja2 import env
 from .utils import makedirs
 
@@ -23,6 +24,7 @@ class AnalyzedPageDebugGenerator(object):
 	def __init__(self, debug_dir):
 		self.debug_dir = debug_dir
 		self.request = None
+		self.__font_generator = FontGenerator()
 		self.__dest_dir = None
 
 	def generate(self, page, image, image_path):
@@ -31,6 +33,7 @@ class AnalyzedPageDebugGenerator(object):
 			return
 		self.__make_dest_dir()
 		self.__extract_images()
+		self.__generate_glyphs()
 		self.__generate_html_output()
 
 	def __debugging_enabled(self):
@@ -42,12 +45,17 @@ class AnalyzedPageDebugGenerator(object):
 		makedirs(os.path.join(self.__dest_dir, 'images'))
 		makedirs(os.path.join(self.__dest_dir, 'css'))
 		makedirs(os.path.join(self.__dest_dir, 'js'))
+		makedirs(os.path.join(self.__dest_dir, 'fonts'))
 
 	def __extract_images(self):
 		for symbol in self.request.page.symbols:
 			image_hash = hashlib.md5(symbol.image.tobytes()).hexdigest()
 			symbol.image_path = os.path.join('images', image_hash + '.png')
 			symbol.image.save(os.path.join(self.__dest_dir, symbol.image_path))
+
+	def __generate_glyphs(self):
+		for symbol in self.request.page.symbols:
+			self.__font_generator.add_symbol(symbol)
 
 	def __generate_html_output(self):
 		context = self.__get_template_context()

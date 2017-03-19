@@ -86,13 +86,13 @@ class TextLine(object):
 
 
 class Font(object):
+	id = 0
 	bold = False
 	italic = False
 	underline = False
 	monospace = False
 	serif = False
 	pointsize = 0
-	id = 0
 
 
 class Word(object):
